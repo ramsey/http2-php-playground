@@ -1,0 +1,38 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+$script = <<SETUP_SCRIPT
+export DEBIAN_FRONTEND=noninteractive
+add-apt-repository -y ppa:ondrej/apache2
+apt-get -y update
+apt-get -y install apache2
+a2enmod http2
+a2enmod ssl
+printf "Protocols h2 http/1.1\n" >> /etc/apache2/conf-available/http2.conf
+ln -s ../conf-available/http2.conf /etc/apache2/conf-enabled/http2.conf
+mkdir -p /etc/apache2/cert/
+openssl req -nodes -newkey rsa:2048 -keyout /etc/apache2/cert/http2.key -out /etc/apache2/cert/http2.csr -subj "/C=US/ST=Tennessee/L=Nashville/O=Acme Corporation/OU=Technology Department/CN=localhost"
+openssl x509 -req -days 365 -in /etc/apache2/cert/http2.csr -signkey /etc/apache2/cert/http2.key -out /etc/apache2/cert/http2.crt
+printf "\n" >> /etc/apache2/conf-available/http2.conf
+printf "Listen 443\n" >> /etc/apache2/conf-available/http2.conf
+printf "<VirtualHost _default_:443>\n" >> /etc/apache2/conf-available/http2.conf
+printf "SSLEngine on\n" >> /etc/apache2/conf-available/http2.conf
+printf "SSLCertificateFile /etc/apache2/cert/http2.crt\n" >> /etc/apache2/conf-available/http2.conf
+printf "SSLCertificateKeyFile /etc/apache2/cert/http2.key\n" >> /etc/apache2/conf-available/http2.conf
+printf "ServerName localhost\n" >> /etc/apache2/conf-available/http2.conf
+printf "</VirtualHost>\n" >> /etc/apache2/conf-available/http2.conf
+service apache2 restart
+SETUP_SCRIPT
+
+Vagrant.configure(2) do |config|
+
+    config.vm.box = "ubuntu/trusty64"
+    config.vm.hostname = "http2-apache"
+    config.vm.network "forwarded_port", guest: 443, host: 8443, auto_correct: true
+    config.vm.provision "shell", inline: $script
+
+    config.vm.provider :virtualbox do |virtualbox|
+        virtualbox.customize ["modifyvm", :id, "--name", "http2-apache"]
+    end
+
+end
