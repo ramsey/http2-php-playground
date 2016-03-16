@@ -1,4 +1,6 @@
 <?php
 // Application middleware
 
-// e.g: $app->add(new \Slim\Csrf\Guard);
+$app->add(new \Ramsey\App\Middleware\ServerPushMiddleware(
+    $app->getContainer()['serverPushAssets']
+));
