@@ -1,3 +1,4 @@
+*.pcap
 composer.lock
 .vagrant/
 vendor/

@@ -30,6 +30,11 @@ Vagrant.configure(2) do |config|
 
     config.vm.provider :virtualbox do |virtualbox|
         virtualbox.customize ["modifyvm", :id, "--name", "http2-apache"]
+
+        # Uncomment the following lines in order to generate a pcap file for use
+        # inspecting traffic to/from the VM with Wireshark
+        #virtualbox.customize ["modifyvm", :id, "--nictrace1", "on"]
+        #virtualbox.customize ["modifyvm", :id, "--nictracefile1", "trace1.pcap"]
     end
 
 end
